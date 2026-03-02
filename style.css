@@ -118,4 +118,11 @@ body {
         border-bottom: 1px solid #ccc;
         height: 50%;
     }
+    .reportes {
+        height: 50%;
+    }
+
+    .console {
+        height: 120px;
+    }
 }
