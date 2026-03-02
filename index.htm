@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golampi</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Barra de herramientas -->
+    <div class="barra-herramientas">
+        <button onclick="nuevoArchivo()"><i class="fa-solid fa-file"></i>Nuevo</button>
+        <button onclick="abrirArchivo()"><i class="fa-solid fa-folder-open"></i>Abrir</button>
+        <button onclick="guardarArchivo()"><i class="fa-solid fa-save"></i>Guardar</button>
+        <button onclick="ejecutarCodigo()"><i class="fa-solid fa-play"></i>Ejecutar</button>
+        <button onclick="limpiarEditor()"><i class="fa-solid fa-trash"></i>Limpiar</button>
+        <input type="file" id="fileInput" style="display:none">
+    </div>
+
+    <!-- Editor -->
+    <div class="contenedor-principal">
+
+        <!-- Texto -->
+        <div class="editor-principal">
+            <div class="numeros-linea" id="numerosLinea">1</div>
+            <textarea id="editor"></textarea>
+        </div>
+
+        <!-- Panel reportes -->
+        <div class="reportes">
+            <h3>Reportes</h3>
+            <button>Reporte 1</button>
+            <button>Reporte 2</button>
+            <button>Reporte 3</button>
+            <button>Reporte 4</button>
+        </div>
+
+    </div>
+
+    <!-- Consola -->
+    <div class="consola" id="salidaConsola">
+        > Consola lista...
+    </div>
+</body>
+
+</html>
