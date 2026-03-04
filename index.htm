@@ -32,10 +32,27 @@
         <!-- Panel reportes -->
         <div class="reportes">
             <h3>Reportes</h3>
-            <button>Reporte 1</button>
-            <button>Reporte 2</button>
-            <button>Reporte 3</button>
-            <button>Reporte 4</button>
+
+            <button onclick="descargarResultado()">
+                <i class="fa-solid fa-file-lines"></i>
+                Descargar Resultado
+            </button>
+
+            <button onclick="descargarErrores()">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                Descargar Errores
+            </button>
+
+            <button onclick="descargarTablaSimbolos()">
+                <i class="fa-solid fa-table"></i>
+                Descargar Tabla de Símbolos
+            </button>
+
+            <!-- <button onclick="descargarAST()">
+                <i class="fa-solid fa-diagram-project"></i>
+                Reporte AST
+            </button> -->
+
         </div>
 
     </div>
@@ -46,4 +63,5 @@
     </div>
     <script src="principal.js" defer></script>
 </body>
+
 </html>
