@@ -186,7 +186,7 @@ type
     ;
 
 arrayType
-    : '[' INT ']' type
+    : '[' expression  ']' type
     ;
 
 pointerType
