@@ -1,6 +1,5 @@
 <?php
 
-namespace App\Semantic;
 
 use GolampiBaseVisitor;
 use GolampiParser;
@@ -20,35 +19,6 @@ class SemanticVisitor extends GolampiBaseVisitor
     DECLARACIÓN DE VARIABLES
     =========================
     */
-
-    // public function visitVarDecl($ctx)
-    // {
-    //     $type = $ctx->type()->getText();
-
-    //     // Obtener todos los IDs
-    //     $ids = $ctx->idList()->ID();
-
-    //     foreach ($ids as $idToken) {
-
-    //         $name = $idToken->getText();
-
-    //         if ($this->symbolTable->currentScope->resolve($name)) {
-
-    //             $this->errors[] = [
-    //                 "line" => $idToken->getLine(),
-    //                 "column" => $idToken->getCharPositionInLine(),
-    //                 "message" => "Variable '$name' ya declarada en este scope"
-    //             ];
-
-    //             continue;
-    //         }
-
-    //         $symbol = new Symbol($name, $type);
-    //         $this->symbolTable->currentScope->define($symbol);
-    //     }
-
-    //     return null;
-    // }
 
     public function visitVarDecl($ctx)
     {
@@ -116,22 +86,22 @@ class SemanticVisitor extends GolampiBaseVisitor
             if ($this->symbolTable->currentScope->resolveLocal($name)) {
 
                 $this->errors[] = [
-                    "line" => $idToken->getLine(),
-                    "column" => $idToken->getCharPositionInLine(),
+                    "line" => $idToken->getSymbol()->getLine(),
+                    "column" => $idToken->getSymbol()->getCharPositionInLine(),
                     "message" => "Variable '$name' ya declarada en este scope"
                 ];
 
                 continue;
             }
 
-            // 4️⃣ Inferir tipo
+            //  Inferir tipo
             $expr = $exprs[$i];
             $type = $this->inferType($expr);
 
-            // 5️⃣ Crear símbolo
+            // Crear símbolo
             $symbol = new Symbol($name, $type);
 
-            // 6️⃣ Insertar en tabla
+            //  Insertar en tabla
             $this->symbolTable->currentScope->define($symbol);
         }
 

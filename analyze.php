@@ -8,11 +8,21 @@ use Antlr\Antlr4\Runtime\CommonTokenStream;
 
 require_once 'generated/GolampiLexer.php';
 require_once 'generated/GolampiParser.php';
+
+require_once 'generated/GolampiVisitor.php';
+require_once 'generated/GolampiBaseVisitor.php';
 require_once 'src/Semantic/CustomErrorListener.php';
-//require_once 'src/Semantic/SemanticVisitor.php';
+
+require_once 'src/Semantic/Scope.php';
+require_once 'src/Semantic/Symbol.php';
+require_once 'src/Semantic/BaseScope.php';
+require_once 'src/Semantic/GlobalScope.php';
+require_once 'src/Semantic/LocalScope.php';
+require_once 'src/Semantic/SymbolTable.php';
+require_once 'src/Semantic/SemanticVisitor.php';
 
 use App\Semantic\CustomErrorListener;
-use App\Semantic\SemanticVisitor;
+use SemanticVisitor;
 
 header('Content-Type: application/json');
 
@@ -44,10 +54,10 @@ try {
     // 5 Parsear
     $tree = $parser->program();
 
-    //$semanticVisitor = new SemanticVisitor();
-    // $semanticVisitor->visit($tree);
+    $semanticVisitor = new SemanticVisitor();
+    $semanticVisitor->visit($tree);
 
-    // $semanticErrors = $semanticVisitor->errors;
+    $semanticErrors = $semanticVisitor->errors;
 
     $errors = $errorListener->errors;
 
@@ -62,14 +72,14 @@ try {
         $output = "✔ Análisis sintáctico exitoso";
     }
 
-    // if (!empty($semanticErrors)) {
+    if (!empty($semanticErrors)) {
 
-    //     $output .= "\nErrores Semánticos:\n";
+        $output .= "\nErrores Semánticos:\n";
 
-    //     foreach ($semanticErrors as $error) {
-    //         $output .= $error . "\n";
-    //     }
-    // }
+        foreach ($semanticErrors as $error) {
+            $output .= "Línea {$error['line']}, Col {$error['column']}: {$error['message']}\n";
+        }
+    }
 } catch (Throwable $e) {
 
     $output = "X Error interno: " . $e->getMessage();

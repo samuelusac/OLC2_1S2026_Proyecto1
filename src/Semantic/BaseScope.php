@@ -1,6 +1,5 @@
 <?php
 
-namespace App\Semantic;
 
 abstract class BaseScope implements Scope
 {

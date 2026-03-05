@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Semantic;
+
 
 class GlobalScope extends BaseScope
 {
