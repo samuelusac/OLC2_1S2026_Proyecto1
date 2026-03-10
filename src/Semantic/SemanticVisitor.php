@@ -167,6 +167,68 @@ class SemanticVisitor extends GolampiBaseVisitor
 
     /*
     =========================
+    ASIGNACION DE VARIABLE
+    =========================
+    */
+    public function visitAssignment($ctx)
+    {
+        $lvalue = $ctx->lvalue();
+
+        // Solo manejamos el caso ID por ahora
+        if ($lvalue->ID()) {
+
+            $idNode = $lvalue->ID();
+            $name = $idNode->getText();
+
+            $symbol = $this->symbolTable->resolve($name);
+
+            // 1 Variable no declarada
+            if ($symbol === null) {
+
+                $this->errors[] = [
+                    "line" => $idNode->getSymbol()->getLine(),
+                    "column" => $idNode->getSymbol()->getCharPositionInLine(),
+                    "message" => "Variable '$name' no declarada"
+                ];
+
+                return null;
+            }
+
+            // 2 Tipo de expresión
+            $exprType = $this->inferType($ctx->expression());
+
+            // 3 Operador de asignación
+            $operator = $ctx->assignOp()->getText();
+
+            // 4 Validar operador
+            if ($operator !== '=') {
+
+                // operadores como += -= *= /= requieren números
+                if ($symbol->type !== "int" && $symbol->type !== "float") {
+
+                    $this->errors[] = [
+                        "line" => $idNode->getSymbol()->getLine(),
+                        "column" => $idNode->getSymbol()->getCharPositionInLine(),
+                        "message" => "Operador '$operator' solo válido para tipos numéricos"
+                    ];
+                }
+            }
+
+            // 5 Validar tipos
+            if ($symbol->type !== $exprType && $exprType !== "unknown") {
+
+                $this->errors[] = [
+                    "line" => $idNode->getSymbol()->getLine(),
+                    "column" => $idNode->getSymbol()->getCharPositionInLine(),
+                    "message" => "Asignación incompatible: '$name' es {$symbol->type} pero recibe {$exprType}"
+                ];
+            }
+        }
+
+        return $this->visitChildren($ctx);
+    }
+    /*
+    =========================
     BLOQUES (SCOPES)
     =========================
     */
