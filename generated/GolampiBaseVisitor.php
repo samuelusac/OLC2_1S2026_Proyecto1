@@ -1,6 +1,5 @@
 <?php
 
-
 /*
  * Generated from Golampi.g4 by ANTLR 4.13.2
  */

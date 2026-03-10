@@ -79,6 +79,8 @@ try {
         foreach ($semanticErrors as $error) {
             $output .= "Línea {$error['line']}, Col {$error['column']}: {$error['message']}\n";
         }
+    }else {
+        $output = "✔ Análisis semantico exitoso";
     }
 } catch (Throwable $e) {
 

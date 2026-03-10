@@ -57,6 +57,21 @@ class SemanticVisitor extends GolampiBaseVisitor
                     "column" => $ctx->getStart()->getCharPositionInLine(),
                     "message" => "Cantidad de variables y expresiones no coincide"
                 ];
+            } else {
+
+                foreach ($exprs as $i => $expr) {
+
+                    $exprType = $this->visit($expr);
+
+                    if ($exprType !== $type && $exprType !== "unknown") {
+
+                        $this->errors[] = [
+                            "line" => $expr->getStart()->getLine(),
+                            "column" => $expr->getStart()->getCharPositionInLine(),
+                            "message" => "Tipo incompatible: se esperaba $type pero se obtuvo $exprType"
+                        ];
+                    }
+                }
             }
         }
 
@@ -79,30 +94,42 @@ class SemanticVisitor extends GolampiBaseVisitor
             return null;
         }
 
+        $newVariableFound = false;
+
         foreach ($ids as $i => $idToken) {
 
             $name = $idToken->getText();
+            $existing = $this->symbolTable->currentScope->resolveLocal($name);
 
-            if ($this->symbolTable->currentScope->resolveLocal($name)) {
+            $exprType = $this->visit($exprs[$i]);
 
-                $this->errors[] = [
-                    "line" => $idToken->getSymbol()->getLine(),
-                    "column" => $idToken->getSymbol()->getCharPositionInLine(),
-                    "message" => "Variable '$name' ya declarada en este scope"
-                ];
+            if ($existing) {
 
-                continue;
+                // Validar tipo compatible
+                if ($existing->type !== $exprType && $exprType !== "unknown") {
+
+                    $this->errors[] = [
+                        "line" => $idToken->getSymbol()->getLine(),
+                        "column" => $idToken->getSymbol()->getCharPositionInLine(),
+                        "message" => "Asignación incompatible para '$name'"
+                    ];
+                }
+            } else {
+
+                $newVariableFound = true;
+
+                $symbol = new Symbol($name, $exprType);
+                $this->symbolTable->currentScope->define($symbol);
             }
+        }
 
-            //  Inferir tipo
-            $expr = $exprs[$i];
-            $type = $this->inferType($expr);
+        if (!$newVariableFound) {
 
-            // Crear símbolo
-            $symbol = new Symbol($name, $type);
-
-            //  Insertar en tabla
-            $this->symbolTable->currentScope->define($symbol);
+            $this->errors[] = [
+                "line" => $ctx->getStart()->getLine(),
+                "column" => $ctx->getStart()->getCharPositionInLine(),
+                "message" => "Short declaration requiere al menos una variable nueva"
+            ];
         }
 
         return null;
@@ -195,7 +222,7 @@ class SemanticVisitor extends GolampiBaseVisitor
             }
 
             // 2 Tipo de expresión
-            $exprType = $this->inferType($ctx->expression());
+            $exprType = $this->visit($ctx->expression());
 
             // 3 Operador de asignación
             $operator = $ctx->assignOp()->getText();
@@ -227,6 +254,308 @@ class SemanticVisitor extends GolampiBaseVisitor
 
         return $this->visitChildren($ctx);
     }
+
+    /*
+    =========================
+    Expresiones
+    =========================
+    */
+
+    public function visitExpression($ctx)
+    {
+        return $this->visit($ctx->logicalOr());
+    }
+
+    public function visitLogicalOr($ctx)
+    {
+        $type = $this->visit($ctx->logicalAnd(0));
+
+        for ($i = 1; $i < count($ctx->logicalAnd()); $i++) {
+
+            $right = $this->visit($ctx->logicalAnd($i));
+
+            if ($type !== "bool" || $right !== "bool") {
+
+                $this->errors[] = [
+                    "line" => $ctx->start->getLine(),
+                    "column" => $ctx->start->getCharPositionInLine(),
+                    "message" => "Operador || requiere operandos booleanos"
+                ];
+
+                return "unknown";
+            }
+        }
+
+        return "bool";
+    }
+
+    public function visitLogicalAnd($ctx)
+    {
+        $type = $this->visit($ctx->equality(0));
+
+        for ($i = 1; $i < count($ctx->equality()); $i++) {
+
+            $right = $this->visit($ctx->equality($i));
+
+            if ($type !== "bool" || $right !== "bool") {
+
+                $this->errors[] = [
+                    "line" => $ctx->start->getLine(),
+                    "column" => $ctx->start->getCharPositionInLine(),
+                    "message" => "Operador && requiere operandos booleanos"
+                ];
+
+                return "unknown";
+            }
+        }
+
+        return "bool";
+    }
+
+    public function visitEquality($ctx)
+    {
+        $left = $this->visit($ctx->relational(0));
+
+        for ($i = 1; $i < count($ctx->relational()); $i++) {
+
+            $right = $this->visit($ctx->relational($i));
+
+            if ($left !== $right) {
+
+                $this->errors[] = [
+                    "line" => $ctx->start->getLine(),
+                    "column" => $ctx->start->getCharPositionInLine(),
+                    "message" => "Comparación inválida entre $left y $right"
+                ];
+
+                return "unknown";
+            }
+        }
+
+        return "bool";
+    }
+
+    public function visitRelational($ctx)
+    {
+        $left = $this->visit($ctx->additive(0));
+
+        for ($i = 1; $i < count($ctx->additive()); $i++) {
+
+            $right = $this->visit($ctx->additive($i));
+
+            if (!in_array($left, ["int", "float"]) || !in_array($right, ["int", "float"])) {
+
+                $this->errors[] = [
+                    "line" => $ctx->start->getLine(),
+                    "column" => $ctx->start->getCharPositionInLine(),
+                    "message" => "Operadores relacionales requieren números"
+                ];
+
+                return "unknown";
+            }
+        }
+
+        return "bool";
+    }
+
+    public function visitAdditive($ctx)
+    {
+        $left = $this->visit($ctx->multiplicative(0));
+
+        for ($i = 1; $i < count($ctx->multiplicative()); $i++) {
+
+            $right = $this->visit($ctx->multiplicative($i));
+
+            if (!in_array($left, ["int", "float"]) || !in_array($right, ["int", "float"])) {
+
+                $this->errors[] = [
+                    "line" => $ctx->start->getLine(),
+                    "column" => $ctx->start->getCharPositionInLine(),
+                    "message" => "Operadores + y - requieren números"
+                ];
+
+                return "unknown";
+            }
+        }
+
+        return $left;
+    }
+
+    public function visitMultiplicative($ctx)
+    {
+        $left = $this->visit($ctx->unary(0));
+
+        for ($i = 1; $i < count($ctx->unary()); $i++) {
+
+            $right = $this->visit($ctx->unary($i));
+
+            if (!in_array($left, ["int", "float"]) || !in_array($right, ["int", "float"])) {
+
+                $this->errors[] = [
+                    "line" => $ctx->start->getLine(),
+                    "column" => $ctx->start->getCharPositionInLine(),
+                    "message" => "Operadores *, / y % requieren números"
+                ];
+
+                return "unknown";
+            }
+        }
+
+        return $left;
+    }
+
+    public function visitUnary($ctx)
+    {
+        if ($ctx->primary()) {
+            return $this->visit($ctx->primary());
+        }
+
+        $type = $this->visit($ctx->unary());
+
+        $op = $ctx->getChild(0)->getText();
+
+        if ($op === "!" && $type !== "bool") {
+
+            $this->errors[] = [
+                "line" => $ctx->start->getLine(),
+                "column" => $ctx->start->getCharPositionInLine(),
+                "message" => "Operador ! requiere booleano"
+            ];
+        }
+
+        if ($op === "-" && !in_array($type, ["int", "float"])) {
+
+            $this->errors[] = [
+                "line" => $ctx->start->getLine(),
+                "column" => $ctx->start->getCharPositionInLine(),
+                "message" => "Operador - requiere número"
+            ];
+        }
+
+        return $type;
+    }
+
+    public function visitPrimary($ctx)
+    {
+        if ($ctx->literal()) {
+            return $this->visit($ctx->literal());
+        }
+
+        if ($ctx->ID()) {
+
+            $name = $ctx->ID()->getText();
+
+            $symbol = $this->symbolTable->resolve($name);
+
+            if (!$symbol) {
+
+                $this->errors[] = [
+                    "line" => $ctx->start->getLine(),
+                    "column" => $ctx->start->getCharPositionInLine(),
+                    "message" => "Variable '$name' no declarada"
+                ];
+
+                return "unknown";
+            }
+
+            return $symbol->type;
+        }
+
+        if ($ctx->expression()) {
+            return $this->visit($ctx->expression());
+        }
+
+        return "unknown";
+    }
+
+    public function visitLiteral($ctx)
+    {
+        if ($ctx->INT()) return "int";
+        if ($ctx->FLOAT()) return "float";
+        if ($ctx->STRING()) return "string";
+        if ($ctx->CHAR()) return "rune";
+
+        if ($ctx->getText() === "true" || $ctx->getText() === "false") {
+            return "bool";
+        }
+
+        return "unknown";
+    }
+
+    /*
+    =========================
+    Sentencias
+    =========================
+    */
+
+    public function visitIfStmt($ctx)
+    {
+        $condType = $this->visit($ctx->expression());
+
+        if ($condType !== "bool") {
+
+            $this->errors[] = [
+                "line" => $ctx->expression()->getStart()->getLine(),
+                "column" => $ctx->expression()->getStart()->getCharPositionInLine(),
+                "message" => "La condición del if debe ser bool, se obtuvo $condType"
+            ];
+        }
+
+        $this->visit($ctx->block(0));
+
+        if ($ctx->block(1)) {
+            $this->visit($ctx->block(1));
+        }
+
+        return null;
+    }
+
+    public function visitForClassic($ctx)
+    {
+        // 1 INIT
+        if ($ctx->simpleVarDecl()) {
+            $this->visit($ctx->simpleVarDecl());
+        }
+
+        if ($ctx->simpleShortVarDecl()) {
+            $this->visit($ctx->simpleShortVarDecl());
+        }
+
+        if ($ctx->simpleAssignment()) {
+            $this->visit($ctx->simpleAssignment());
+        }
+
+        // 2 CONDITION
+        if ($ctx->expression()) {
+
+            $condType = $this->visit($ctx->expression());
+
+            if ($condType !== "bool") {
+
+                $this->errors[] = [
+                    "line" => $ctx->expression()->getStart()->getLine(),
+                    "column" => $ctx->expression()->getStart()->getCharPositionInLine(),
+                    "message" => "La condición del for debe ser bool, se obtuvo $condType"
+                ];
+            }
+        }
+
+        // 3 UPDATE
+        if ($ctx->simpleIncDec()) {
+            $this->visit($ctx->simpleIncDec());
+        }
+
+        // 4 BODY
+        if($ctx->block()) {
+            $this->visit($ctx->block());
+        }
+        
+
+        return null;
+    }
+
+
+
     /*
     =========================
     BLOQUES (SCOPES)

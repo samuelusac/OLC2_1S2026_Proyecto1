@@ -13,12 +13,12 @@ declaration
 
 /* Declaraciones y asignacion */
 varDecl
-    : 'var' idList type ('=' exprList)? ';'
+    : 'var' idList type ('=' exprList)? 
     ;
 
 /* Declaracion corta de variables */
 shortVarDecl
-    : idList ':=' exprList ';'
+    : idList ':=' exprList 
     ;
 
 /* Declaraciones multiple */
@@ -33,7 +33,7 @@ exprList
 
 /* Declaraciones constantess */
 constDecl
-    : 'const' ID type '=' expression ';'
+    : 'const' ID type '=' expression 
     ;
 
 /* Declaraciones de funciones */
@@ -80,7 +80,7 @@ statement
 /* Asignaciones */
 
 assignment
-    : lvalue assignOp expression ';'
+    : lvalue assignOp expression 
     ;
 
 assignOp
@@ -98,7 +98,7 @@ lvalue
     ;
 
 incDecStmt
-    : lvalue ('++' | '--') ';'
+    : lvalue ('++' | '--') 
     ;
 
 /* Sentencias de control de flujo */
@@ -125,7 +125,7 @@ forStmt
     ;
 
 forClassic
-    : (simpleVarDecl | simpleShortVarDecl | simpleAssignment)? ';'
+    : (simpleVarDecl | simpleShortVarDecl | simpleAssignment)? 
       expression? ';'
       (simpleAssignment | simpleIncDec)?
       block
@@ -158,19 +158,19 @@ forInfinite
 /* Sentencias de control de transferencia */
 
 breakStmt
-    : 'break' ';'
+    : 'break' 
     ;
 
 continueStmt
-    : 'continue' ';'
+    : 'continue' 
     ;
 
 returnStmt
-    : 'return' exprList? ';'
+    : 'return' exprList? 
     ;
 
 expressionStmt
-    : functionCall ';'
+    : functionCall 
     ;
 
 /* Tipos */
