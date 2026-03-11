@@ -239,6 +239,7 @@ primary
 
 functionCall
     : ID '(' exprList? ')'
+    | ID DOT ID '(' exprList? ')'
     ;
 
 /* Arreglos */
@@ -265,6 +266,7 @@ INT     : [0-9]+ ;
 FLOAT   : [0-9]+ '.' [0-9]+ ;
 STRING  : '"' .*? '"' ;
 CHAR    : '\'' . '\'' ;
+DOT     : '.' ;
 
 COMMENT     : '//' ~[\r\n]* -> skip ;
 MULTICOMMENT: '/*' .*? '*/' -> skip ;

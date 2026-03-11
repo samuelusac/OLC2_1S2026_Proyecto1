@@ -23,8 +23,8 @@ public class GolampiParser extends Parser {
 		T__31=32, T__32=33, T__33=34, T__34=35, T__35=36, T__36=37, T__37=38, 
 		T__38=39, T__39=40, T__40=41, T__41=42, T__42=43, T__43=44, T__44=45, 
 		T__45=46, T__46=47, T__47=48, T__48=49, T__49=50, T__50=51, T__51=52, 
-		ID=53, INT=54, FLOAT=55, STRING=56, CHAR=57, COMMENT=58, MULTICOMMENT=59, 
-		WS=60;
+		ID=53, INT=54, FLOAT=55, STRING=56, CHAR=57, DOT=58, COMMENT=59, MULTICOMMENT=60, 
+		WS=61;
 	public static final int
 		RULE_program = 0, RULE_declaration = 1, RULE_varDecl = 2, RULE_shortVarDecl = 3, 
 		RULE_idList = 4, RULE_exprList = 5, RULE_constDecl = 6, RULE_funcDecl = 7, 
@@ -62,7 +62,7 @@ public class GolampiParser extends Parser {
 			"';'", "'break'", "'continue'", "'return'", "'int'", "'float'", "'bool'", 
 			"'string'", "'rune'", "'['", "']'", "'||'", "'&&'", "'=='", "'!='", "'>'", 
 			"'<'", "'>='", "'<='", "'+'", "'-'", "'/'", "'%'", "'!'", "'&'", "'true'", 
-			"'false'", "'nil'"
+			"'false'", "'nil'", null, null, null, null, null, "'.'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
@@ -73,7 +73,7 @@ public class GolampiParser extends Parser {
 			null, null, null, null, null, null, null, null, null, null, null, null, 
 			null, null, null, null, null, null, null, null, null, null, null, null, 
 			null, null, null, null, null, "ID", "INT", "FLOAT", "STRING", "CHAR", 
-			"COMMENT", "MULTICOMMENT", "WS"
+			"DOT", "COMMENT", "MULTICOMMENT", "WS"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -2595,10 +2595,14 @@ public class GolampiParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class FunctionCallContext extends ParserRuleContext {
-		public TerminalNode ID() { return getToken(GolampiParser.ID, 0); }
+		public List<TerminalNode> ID() { return getTokens(GolampiParser.ID); }
+		public TerminalNode ID(int i) {
+			return getToken(GolampiParser.ID, i);
+		}
 		public ExprListContext exprList() {
 			return getRuleContext(ExprListContext.class,0);
 		}
+		public TerminalNode DOT() { return getToken(GolampiParser.DOT, 0); }
 		public FunctionCallContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -2610,24 +2614,55 @@ public class GolampiParser extends Parser {
 		enterRule(_localctx, 90, RULE_functionCall);
 		int _la;
 		try {
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(396);
-			match(ID);
-			setState(397);
-			match(T__6);
-			setState(399);
+			setState(410);
 			_errHandler.sync(this);
-			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 287984085547122816L) != 0)) {
+			switch ( getInterpreter().adaptivePredict(_input,37,_ctx) ) {
+			case 1:
+				enterOuterAlt(_localctx, 1);
 				{
-				setState(398);
-				exprList();
+				setState(396);
+				match(ID);
+				setState(397);
+				match(T__6);
+				setState(399);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 287984085547122816L) != 0)) {
+					{
+					setState(398);
+					exprList();
+					}
 				}
-			}
 
-			setState(401);
-			match(T__7);
+				setState(401);
+				match(T__7);
+				}
+				break;
+			case 2:
+				enterOuterAlt(_localctx, 2);
+				{
+				setState(402);
+				match(ID);
+				setState(403);
+				match(DOT);
+				setState(404);
+				match(ID);
+				setState(405);
+				match(T__6);
+				setState(407);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 287984085547122816L) != 0)) {
+					{
+					setState(406);
+					exprList();
+					}
+				}
+
+				setState(409);
+				match(T__7);
+				}
+				break;
 			}
 		}
 		catch (RecognitionException re) {
@@ -2663,23 +2698,23 @@ public class GolampiParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(403);
+			setState(412);
 			match(ID);
-			setState(408); 
+			setState(417); 
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			do {
 				{
 				{
-				setState(404);
+				setState(413);
 				match(T__33);
-				setState(405);
+				setState(414);
 				expression();
-				setState(406);
+				setState(415);
 				match(T__34);
 				}
 				}
-				setState(410); 
+				setState(419); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			} while ( _la==T__33 );
@@ -2715,7 +2750,7 @@ public class GolampiParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(412);
+			setState(421);
 			_la = _input.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 278097276990128128L) != 0)) ) {
 			_errHandler.recoverInline(this);
@@ -2739,7 +2774,7 @@ public class GolampiParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001<\u019f\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
+		"\u0004\u0001=\u01a8\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
 		"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002"+
 		"\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0002\u0007\u0007\u0007\u0002"+
 		"\b\u0007\b\u0002\t\u0007\t\u0002\n\u0007\n\u0002\u000b\u0007\u000b\u0002"+
@@ -2794,13 +2829,14 @@ public class GolampiParser extends Parser {
 		")\u0001)\u0005)\u0171\b)\n)\f)\u0174\t)\u0001*\u0001*\u0001*\u0005*\u0179"+
 		"\b*\n*\f*\u017c\t*\u0001+\u0001+\u0001+\u0003+\u0181\b+\u0001,\u0001,"+
 		"\u0001,\u0001,\u0001,\u0001,\u0001,\u0001,\u0003,\u018b\b,\u0001-\u0001"+
-		"-\u0001-\u0003-\u0190\b-\u0001-\u0001-\u0001.\u0001.\u0001.\u0001.\u0001"+
-		".\u0004.\u0199\b.\u000b.\f.\u019a\u0001/\u0001/\u0001/\u0000\u00000\u0000"+
-		"\u0002\u0004\u0006\b\n\f\u000e\u0010\u0012\u0014\u0016\u0018\u001a\u001c"+
-		"\u001e \"$&(*,.02468:<>@BDFHJLNPRTVXZ\\^\u0000\b\u0002\u0000\u0002\u0002"+
-		"\u000b\u000e\u0001\u0000\u0010\u0011\u0001\u0000&\'\u0001\u0000(+\u0001"+
-		"\u0000,-\u0002\u0000\u000f\u000f./\u0003\u0000\u000f\u000f--01\u0002\u0000"+
-		"2469\u01aa\u0000d\u0001\u0000\u0000\u0000\u0002l\u0001\u0000\u0000\u0000"+
+		"-\u0001-\u0003-\u0190\b-\u0001-\u0001-\u0001-\u0001-\u0001-\u0001-\u0003"+
+		"-\u0198\b-\u0001-\u0003-\u019b\b-\u0001.\u0001.\u0001.\u0001.\u0001.\u0004"+
+		".\u01a2\b.\u000b.\f.\u01a3\u0001/\u0001/\u0001/\u0000\u00000\u0000\u0002"+
+		"\u0004\u0006\b\n\f\u000e\u0010\u0012\u0014\u0016\u0018\u001a\u001c\u001e"+
+		" \"$&(*,.02468:<>@BDFHJLNPRTVXZ\\^\u0000\b\u0002\u0000\u0002\u0002\u000b"+
+		"\u000e\u0001\u0000\u0010\u0011\u0001\u0000&\'\u0001\u0000(+\u0001\u0000"+
+		",-\u0002\u0000\u000f\u000f./\u0003\u0000\u000f\u000f--01\u0002\u00002"+
+		"469\u01b5\u0000d\u0001\u0000\u0000\u0000\u0002l\u0001\u0000\u0000\u0000"+
 		"\u0004n\u0001\u0000\u0000\u0000\u0006u\u0001\u0000\u0000\u0000\by\u0001"+
 		"\u0000\u0000\u0000\n\u0081\u0001\u0000\u0000\u0000\f\u0089\u0001\u0000"+
 		"\u0000\u0000\u000e\u008f\u0001\u0000\u0000\u0000\u0010\u009b\u0001\u0000"+
@@ -2820,8 +2856,8 @@ public class GolampiParser extends Parser {
 		"\u0000\u0000L\u0155\u0001\u0000\u0000\u0000N\u015d\u0001\u0000\u0000\u0000"+
 		"P\u0165\u0001\u0000\u0000\u0000R\u016d\u0001\u0000\u0000\u0000T\u0175"+
 		"\u0001\u0000\u0000\u0000V\u0180\u0001\u0000\u0000\u0000X\u018a\u0001\u0000"+
-		"\u0000\u0000Z\u018c\u0001\u0000\u0000\u0000\\\u0193\u0001\u0000\u0000"+
-		"\u0000^\u019c\u0001\u0000\u0000\u0000`c\u0003\u0002\u0001\u0000ac\u0003"+
+		"\u0000\u0000Z\u019a\u0001\u0000\u0000\u0000\\\u019c\u0001\u0000\u0000"+
+		"\u0000^\u01a5\u0001\u0000\u0000\u0000`c\u0003\u0002\u0001\u0000ac\u0003"+
 		"\u0018\f\u0000b`\u0001\u0000\u0000\u0000ba\u0001\u0000\u0000\u0000cf\u0001"+
 		"\u0000\u0000\u0000db\u0001\u0000\u0000\u0000de\u0001\u0000\u0000\u0000"+
 		"eg\u0001\u0000\u0000\u0000fd\u0001\u0000\u0000\u0000gh\u0005\u0000\u0000"+
@@ -2986,16 +3022,21 @@ public class GolampiParser extends Parser {
 		"\u0000\u0000\u018bY\u0001\u0000\u0000\u0000\u018c\u018d\u00055\u0000\u0000"+
 		"\u018d\u018f\u0005\u0007\u0000\u0000\u018e\u0190\u0003\n\u0005\u0000\u018f"+
 		"\u018e\u0001\u0000\u0000\u0000\u018f\u0190\u0001\u0000\u0000\u0000\u0190"+
-		"\u0191\u0001\u0000\u0000\u0000\u0191\u0192\u0005\b\u0000\u0000\u0192["+
-		"\u0001\u0000\u0000\u0000\u0193\u0198\u00055\u0000\u0000\u0194\u0195\u0005"+
-		"\"\u0000\u0000\u0195\u0196\u0003H$\u0000\u0196\u0197\u0005#\u0000\u0000"+
-		"\u0197\u0199\u0001\u0000\u0000\u0000\u0198\u0194\u0001\u0000\u0000\u0000"+
-		"\u0199\u019a\u0001\u0000\u0000\u0000\u019a\u0198\u0001\u0000\u0000\u0000"+
-		"\u019a\u019b\u0001\u0000\u0000\u0000\u019b]\u0001\u0000\u0000\u0000\u019c"+
-		"\u019d\u0007\u0007\u0000\u0000\u019d_\u0001\u0000\u0000\u0000%bdls~\u0086"+
-		"\u0093\u0097\u00a0\u00ad\u00b2\u00b8\u00c8\u00d4\u00df\u00e1\u00e9\u00ed"+
-		"\u00f7\u00ff\u0108\u010d\u0110\u0115\u011e\u0136\u0141\u0152\u015a\u0162"+
-		"\u016a\u0172\u017a\u0180\u018a\u018f\u019a";
+		"\u0191\u0001\u0000\u0000\u0000\u0191\u019b\u0005\b\u0000\u0000\u0192\u0193"+
+		"\u00055\u0000\u0000\u0193\u0194\u0005:\u0000\u0000\u0194\u0195\u00055"+
+		"\u0000\u0000\u0195\u0197\u0005\u0007\u0000\u0000\u0196\u0198\u0003\n\u0005"+
+		"\u0000\u0197\u0196\u0001\u0000\u0000\u0000\u0197\u0198\u0001\u0000\u0000"+
+		"\u0000\u0198\u0199\u0001\u0000\u0000\u0000\u0199\u019b\u0005\b\u0000\u0000"+
+		"\u019a\u018c\u0001\u0000\u0000\u0000\u019a\u0192\u0001\u0000\u0000\u0000"+
+		"\u019b[\u0001\u0000\u0000\u0000\u019c\u01a1\u00055\u0000\u0000\u019d\u019e"+
+		"\u0005\"\u0000\u0000\u019e\u019f\u0003H$\u0000\u019f\u01a0\u0005#\u0000"+
+		"\u0000\u01a0\u01a2\u0001\u0000\u0000\u0000\u01a1\u019d\u0001\u0000\u0000"+
+		"\u0000\u01a2\u01a3\u0001\u0000\u0000\u0000\u01a3\u01a1\u0001\u0000\u0000"+
+		"\u0000\u01a3\u01a4\u0001\u0000\u0000\u0000\u01a4]\u0001\u0000\u0000\u0000"+
+		"\u01a5\u01a6\u0007\u0007\u0000\u0000\u01a6_\u0001\u0000\u0000\u0000\'"+
+		"bdls~\u0086\u0093\u0097\u00a0\u00ad\u00b2\u00b8\u00c8\u00d4\u00df\u00e1"+
+		"\u00e9\u00ed\u00f7\u00ff\u0108\u010d\u0110\u0115\u011e\u0136\u0141\u0152"+
+		"\u015a\u0162\u016a\u0172\u017a\u0180\u018a\u018f\u0197\u019a\u01a3";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
