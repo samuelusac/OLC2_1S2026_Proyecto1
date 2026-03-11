@@ -436,17 +436,13 @@ class SemanticVisitor extends GolampiBaseVisitor
 
     public function visitLogicalOr($ctx)
     {
-        $left = $this->visit($ctx->logicalAnd(0));
-
-        if (count($ctx->logicalAnd()) == 1) {
-            return $left;
-        }
+        $type = $this->visit($ctx->logicalAnd(0));
 
         for ($i = 1; $i < count($ctx->logicalAnd()); $i++) {
 
             $right = $this->visit($ctx->logicalAnd($i));
 
-            if ($left !== "bool" || $right !== "bool") {
+            if ($type !== "bool" || $right !== "bool") {
 
                 $this->errors[] = [
                     "line" => $ctx->start->getLine(),
@@ -457,25 +453,21 @@ class SemanticVisitor extends GolampiBaseVisitor
                 return "unknown";
             }
 
-            $left = "bool";
+            $type = "bool";
         }
 
-        return "bool";
+        return $type;
     }
 
     public function visitLogicalAnd($ctx)
     {
-        $left = $this->visit($ctx->equality(0));
-
-        if (count($ctx->equality()) == 1) {
-            return $left;
-        }
+        $type = $this->visit($ctx->equality(0));
 
         for ($i = 1; $i < count($ctx->equality()); $i++) {
 
             $right = $this->visit($ctx->equality($i));
 
-            if ($left !== "bool" || $right !== "bool") {
+            if ($type !== "bool" || $right !== "bool") {
 
                 $this->errors[] = [
                     "line" => $ctx->start->getLine(),
@@ -486,54 +478,46 @@ class SemanticVisitor extends GolampiBaseVisitor
                 return "unknown";
             }
 
-            $left = "bool";
+            $type = "bool";
         }
 
-        return "bool";
+        return $type;
     }
 
     public function visitEquality($ctx)
     {
-        $left = $this->visit($ctx->relational(0));
-
-        if (count($ctx->relational()) == 1) {
-            return $left;
-        }
+        $type = $this->visit($ctx->relational(0));
 
         for ($i = 1; $i < count($ctx->relational()); $i++) {
 
             $right = $this->visit($ctx->relational($i));
 
-            if ($left !== $right) {
+            if ($type !== $right) {
 
                 $this->errors[] = [
                     "line" => $ctx->start->getLine(),
                     "column" => $ctx->start->getCharPositionInLine(),
-                    "message" => "Comparación entre tipos incompatibles ($left y $right)"
+                    "message" => "Comparación entre tipos incompatibles"
                 ];
 
                 return "unknown";
             }
 
-            $left = "bool";
+            $type = "bool";
         }
 
-        return "bool";
+        return $type;
     }
 
     public function visitRelational($ctx)
     {
-        $left = $this->visit($ctx->additive(0));
-
-        if (count($ctx->additive()) == 1) {
-            return $left;
-        }
+        $type = $this->visit($ctx->additive(0));
 
         for ($i = 1; $i < count($ctx->additive()); $i++) {
 
             $right = $this->visit($ctx->additive($i));
 
-            if (!in_array($left, ["int", "float"]) || !in_array($right, ["int", "float"])) {
+            if (!in_array($type, ["int", "float"]) || !in_array($right, ["int", "float"])) {
 
                 $this->errors[] = [
                     "line" => $ctx->start->getLine(),
@@ -544,25 +528,21 @@ class SemanticVisitor extends GolampiBaseVisitor
                 return "unknown";
             }
 
-            return "bool"; //$left = "bool";
+            $type = "bool";
         }
 
-        return "bool";
+        return $type;
     }
 
     public function visitAdditive($ctx)
     {
-        $left = $this->visit($ctx->multiplicative(0));
-
-        if (count($ctx->multiplicative()) == 1) {
-            return $left;
-        }
+        $type = $this->visit($ctx->multiplicative(0));
 
         for ($i = 1; $i < count($ctx->multiplicative()); $i++) {
 
             $right = $this->visit($ctx->multiplicative($i));
 
-            if (!in_array($left, ["int", "float"]) || !in_array($right, ["int", "float"])) {
+            if (!in_array($type, ["int", "float"]) || !in_array($right, ["int", "float"])) {
 
                 $this->errors[] = [
                     "line" => $ctx->start->getLine(),
@@ -573,47 +553,43 @@ class SemanticVisitor extends GolampiBaseVisitor
                 return "unknown";
             }
 
-            if ($left == "float" || $right == "float") {
-                $left = "float";
+            if ($type == "float" || $right == "float") {
+                $type = "float";
             } else {
-                $left = "int";
+                $type = "int";
             }
         }
 
-        return $left;
+        return $type;
     }
 
     public function visitMultiplicative($ctx)
     {
-        $left = $this->visit($ctx->unary(0));
-
-        if (count($ctx->unary()) == 1) {
-            return $left;
-        }
+        $type = $this->visit($ctx->unary(0));
 
         for ($i = 1; $i < count($ctx->unary()); $i++) {
 
             $right = $this->visit($ctx->unary($i));
 
-            if (!in_array($left, ["int", "float"]) || !in_array($right, ["int", "float"])) {
+            if (!in_array($type, ["int", "float"]) || !in_array($right, ["int", "float"])) {
 
                 $this->errors[] = [
                     "line" => $ctx->start->getLine(),
                     "column" => $ctx->start->getCharPositionInLine(),
-                    "message" => "Operadores *, / requieren números"
+                    "message" => "Operadores *,/,% requieren números"
                 ];
 
                 return "unknown";
             }
 
-            if ($left == "float" || $right == "float") {
-                $left = "float";
+            if ($type == "float" || $right == "float") {
+                $type = "float";
             } else {
-                $left = "int";
+                $type = "int";
             }
         }
 
-        return $left;
+        return $type;
     }
 
     public function visitUnary($ctx)
@@ -815,7 +791,168 @@ class SemanticVisitor extends GolampiBaseVisitor
         return null;
     }
 
+    /*
+    =========================
+    Funciones nativas y llamadas a funciones
+    =========================
+    */
 
+    public function visitFunctionCall($ctx)
+    {
+        $args = $ctx->exprList()?->expression() ?? [];
+
+        /*
+    =========================
+    len()
+    =========================
+    */
+        if ($ctx->ID(0)->getText() === "len") {
+
+            if (count($args) !== 1) {
+
+                $this->errors[] = [
+                    "line" => $ctx->start->getLine(),
+                    "column" => $ctx->start->getCharPositionInLine(),
+                    "message" => "len() requiere exactamente un argumento"
+                ];
+
+                return "unknown";
+            }
+
+            $type = $this->visit($args[0]);
+
+            if ($type !== "string" && substr($type, -2) !== "[]") {
+
+                $this->errors[] = [
+                    "line" => $ctx->start->getLine(),
+                    "column" => $ctx->start->getCharPositionInLine(),
+                    "message" => "len() solo acepta string o array"
+                ];
+
+                return "unknown";
+            }
+
+            return "int";
+        }
+
+        /*
+        =========================
+        fmt.Println()
+        =========================
+        */
+        if ($ctx->ID(0)->getText() === "fmt" && $ctx->ID(1)?->getText() === "Println") {
+
+            foreach ($args as $expr) {
+                $this->visit($expr);
+            }
+
+            return "void";
+        }
+
+
+        /*
+        =========================
+        now()
+        =========================
+        */
+
+        if ($ctx->ID(0)->getText() === "now") {
+
+            if (count($args) !== 0) {
+
+                $this->errors[] = [
+                    "line" => $ctx->start->getLine(),
+                    "column" => $ctx->start->getCharPositionInLine(),
+                    "message" => "now() no recibe argumentos"
+                ];
+
+                return "unknown";
+            }
+
+            return "string";
+        }
+
+        /*
+=========================
+substr()
+=========================
+*/
+
+        if ($ctx->ID(0)->getText() === "substr") {
+
+            if (count($args) !== 3) {
+
+                $this->errors[] = [
+                    "line" => $ctx->start->getLine(),
+                    "column" => $ctx->start->getCharPositionInLine(),
+                    "message" => "substr() requiere exactamente 3 argumentos"
+                ];
+
+                return "unknown";
+            }
+
+            $textType = $this->visit($args[0]);
+            $startType = $this->visit($args[1]);
+            $lengthType = $this->visit($args[2]);
+
+            if ($textType !== "string") {
+
+                $this->errors[] = [
+                    "line" => $args[0]->getStart()->getLine(),
+                    "column" => $args[0]->getStart()->getCharPositionInLine(),
+                    "message" => "El primer argumento de substr() debe ser string"
+                ];
+
+                return "unknown";
+            }
+
+            if ($startType !== "int" || $lengthType !== "int") {
+
+                $this->errors[] = [
+                    "line" => $ctx->start->getLine(),
+                    "column" => $ctx->start->getCharPositionInLine(),
+                    "message" => "Los índices de substr() deben ser enteros"
+                ];
+
+                return "unknown";
+            }
+
+            return "string";
+        }
+
+                /*
+        =========================
+        typeOf()
+        =========================
+        */
+
+        if ($ctx->ID(0)->getText() === "typeOf") {
+
+            if (count($args) !== 1) {
+
+                $this->errors[] = [
+                    "line" => $ctx->start->getLine(),
+                    "column" => $ctx->start->getCharPositionInLine(),
+                    "message" => "typeOf() requiere exactamente un argumento"
+                ];
+
+                return "unknown";
+            }
+
+            // visitar argumento para validar expresión
+            $this->visit($args[0]);
+
+            return "string";
+        }
+
+        $this->errors[] = [
+            "line" => $ctx->start->getLine(),
+            "column" => $ctx->start->getCharPositionInLine(),
+            "message" => "Función no definida"
+        ];
+
+        return "unknown";
+    }
 
     /*
     =========================

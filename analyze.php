@@ -1,5 +1,30 @@
 <?php
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+
+set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+    echo json_encode([
+        "error" => "PHP ERROR",
+        "message" => $errstr,
+        "file" => $errfile,
+        "line" => $errline
+    ]);
+    exit;
+});
+
+set_exception_handler(function ($e) {
+    echo json_encode([
+        "error" => "EXCEPTION",
+        "message" => $e->getMessage(),
+        "file" => $e->getFile(),
+        "line" => $e->getLine()
+    ]);
+    exit;
+});
+
+
 require 'vendor/autoload.php';
 
 use Antlr\Antlr4\Runtime\InputStream;
@@ -20,9 +45,11 @@ require_once 'src/Semantic/GlobalScope.php';
 require_once 'src/Semantic/LocalScope.php';
 require_once 'src/Semantic/SymbolTable.php';
 require_once 'src/Semantic/SemanticVisitor.php';
+require_once 'src/Semantic/ExecutionVisitor.php';
 
 use App\Semantic\CustomErrorListener;
 use SemanticVisitor;
+use ExecutionVisitor;
 
 header('Content-Type: application/json');
 
@@ -31,6 +58,9 @@ $code = $data["code"] ?? "";
 
 $output = "";
 $errors = [];
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 try {
 
@@ -79,14 +109,57 @@ try {
         foreach ($semanticErrors as $error) {
             $output .= "Línea {$error['line']}, Col {$error['column']}: {$error['message']}\n";
         }
-    }else {
+    } else {
         $output = "✔ Análisis semantico exitoso";
     }
+
+    // =============================
+    // SI HAY ERRORES SINTACTICOS
+    // =============================
+
+    if (!empty($errors)) {
+
+        echo json_encode([
+            "output" => $output
+        ]);
+        exit;
+    }
+
+    // =============================
+    // SI HAY ERRORES SEMANTICOS
+    // =============================
+
+    if (!empty($semanticErrors)) {
+
+        echo json_encode([
+            "output" => $output
+        ]);
+        exit;
+    }
+
+    // =============================
+    // EJECUCION DEL PROGRAMA
+    // =============================
+
+    $executor = new ExecutionVisitor();
+    $executor->visit($tree);
+
+    echo json_encode([
+        "output" => $executor->output
+    ]);
 } catch (Throwable $e) {
 
-    $output = "X Error interno: " . $e->getMessage();
+    //$output = "X Error interno: " . $e->getMessage();
+    echo json_encode([
+        "error" => "RUNTIME ERROR",
+        "message" => $e->getMessage(),
+        "line" => $e->getLine(),
+        "file" => $e->getFile()
+    ]);
+
+    exit;
 }
 
-echo json_encode([
-    "output" => $output
-]);
+// echo json_encode([
+//     "output" => $output
+// ]);
