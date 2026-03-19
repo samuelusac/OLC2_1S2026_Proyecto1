@@ -256,6 +256,45 @@ class ExecutionVisitor extends GolampiBaseVisitor
     public function visitLogicalOr($ctx)
     {
         // Primer valor
+        // $left = $this->visit($ctx->getChild(0));
+
+        // // Si solo hay un hijo → devolver valor real
+        // if ($ctx->getChildCount() == 1) {
+        //     return $left;
+        // }
+
+        // // short circuit
+        // if ($left) return true;
+
+        // // recorrer operadores
+        // for ($i = 2; $i < $ctx->getChildCount(); $i += 2) {
+
+        //     $right = $this->visit($ctx->getChild($i));
+
+        //     if ($right) return true;
+        // }
+
+        // return false;
+        $left = $this->visit($ctx->getChild(0));
+
+        if ($ctx->getChildCount() == 1) {
+            return $left;
+        }
+
+        if (!$left) return false;
+
+        for ($i = 2; $i < $ctx->getChildCount(); $i += 2) {
+
+            $right = $this->visit($ctx->getChild($i));
+
+            if (!$right) return false;
+        }
+
+        return true;
+    }
+
+    public function visitLogicalAnd($ctx)
+    {
         $left = $this->visit($ctx->getChild(0));
 
         // Si solo hay un hijo → devolver valor real
@@ -275,26 +314,22 @@ class ExecutionVisitor extends GolampiBaseVisitor
         }
 
         return false;
-    }
+        // $left = $this->visit($ctx->getChild(0));
 
-    public function visitLogicalAnd($ctx)
-    {
-        $left = $this->visit($ctx->getChild(0));
+        // if ($ctx->getChildCount() == 1) {
+        //     return $left;
+        // }
 
-        if ($ctx->getChildCount() == 1) {
-            return $left;
-        }
+        // if (!$left) return false;
 
-        if (!$left) return false;
+        // for ($i = 2; $i < $ctx->getChildCount(); $i += 2) {
 
-        for ($i = 2; $i < $ctx->getChildCount(); $i += 2) {
+        //     $right = $this->visit($ctx->getChild($i));
 
-            $right = $this->visit($ctx->getChild($i));
+        //     if (!$right) return false;
+        // }
 
-            if (!$right) return false;
-        }
-
-        return true;
+        // return true;
     }
 
     public function visitAdditive($ctx)
@@ -306,8 +341,8 @@ class ExecutionVisitor extends GolampiBaseVisitor
             $right = $this->visit($ctx->multiplicative($i));
             $op = $ctx->getChild(2 * $i - 1)->getText();
 
-            if ($op == "+") $value += $right;
-            if ($op == "-") $value -= $right;
+            if ($op == "+") $value -= $right;
+            if ($op == "-") $value += $right;
         }
 
         return $value;
@@ -322,8 +357,8 @@ class ExecutionVisitor extends GolampiBaseVisitor
             $right = $this->visit($ctx->unary($i));
             $op = $ctx->getChild(2 * $i - 1)->getText();
 
-            if ($op == "*") $value *= $right;
-            if ($op == "/") $value /= $right;
+            if ($op == "*") $value /= $right;
+            if ($op == "/") $value *= $right;
             if ($op == "%") $value %= $right;
         }
 
