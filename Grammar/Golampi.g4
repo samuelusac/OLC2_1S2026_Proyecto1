@@ -65,6 +65,7 @@ block
 
 statement
     : varDecl
+    | constDecl
     | shortVarDecl
     | assignment
     | incDecStmt
@@ -125,7 +126,7 @@ forStmt
     ;
 
 forClassic
-    : (simpleVarDecl | simpleShortVarDecl | simpleAssignment)? 
+    : (simpleVarDecl | simpleShortVarDecl | simpleAssignment)? ';'
       expression? ';'
       (simpleAssignment | simpleIncDec)?
       block
@@ -176,8 +177,8 @@ expressionStmt
 /* Tipos */
 
 type
-    : 'int'
-    | 'float'
+    : 'int32'
+    | 'float32'
     | 'bool'
     | 'string'
     | 'rune'
@@ -211,7 +212,7 @@ equality
     ;
 
 relational
-    : additive ( ('>' | '<' | '>=' | '<=') additive )*
+    : additive ( (GT | LT | GE | LE) additive )*
     ;
 
 additive
@@ -260,6 +261,13 @@ literal
     ;
 
 /* Lexico */
+
+LE  : '<=' ;
+GE  : '>=' ;
+LT  : '<' ;
+GT  : '>' ;
+EQ  : '==' ;
+NEQ : '!=' ;
 
 ID      : [a-zA-Z_][a-zA-Z0-9_]* ;
 INT     : [0-9]+ ;

@@ -1,8 +1,8 @@
 <?php
 
 
-use GolampiBaseVisitor;
-use GolampiParser;
+// use GolampiBaseVisitor;
+// use GolampiParser;
 
 class SemanticVisitor extends GolampiBaseVisitor
 {
@@ -140,18 +140,55 @@ class SemanticVisitor extends GolampiBaseVisitor
         return null;
     }
 
+    public function visitConstDecl($ctx)
+    {
+        $name = $ctx->ID()->getText();
+        $type = $ctx->type()->getText();
+
+        // 1. Verificar redeclaración en mismo scope
+        if ($this->symbolTable->currentScope->resolveLocal($name)) {
+
+            $this->errors[] = [
+                "line" => $ctx->start->getLine(),
+                "column" => $ctx->start->getCharPositionInLine(),
+                "message" => "Constante '$name' ya declarada en este scope"
+            ];
+
+            return null;
+        }
+
+        // 2. Obtener tipo de expresión
+        $exprType = $this->visit($ctx->expression());
+
+        if ($exprType !== $type && $exprType !== "unknown") {
+
+            $this->errors[] = [
+                "line" => $ctx->expression()->getStart()->getLine(),
+                "column" => $ctx->expression()->getStart()->getCharPositionInLine(),
+                "message" => "Tipo incompatible en constante '$name': se esperaba $type pero se obtuvo $exprType"
+            ];
+        }
+
+        // 3. Guardar símbolo como constante
+        $symbol = new Symbol($name, $type, true);
+
+        $this->symbolTable->currentScope->define($symbol);
+
+        return null;
+    }
+
     private function inferType($expr)
     {
         $text = $expr->getText();
 
         // entero
         if (preg_match('/^[0-9]+$/', $text)) {
-            return "int";
+            return "int32";
         }
 
         // float
         if (preg_match('/^[0-9]+\.[0-9]+$/', $text)) {
-            return "float";
+            return "float32";
         }
 
         // string
@@ -250,7 +287,7 @@ class SemanticVisitor extends GolampiBaseVisitor
 
             $indexType = $this->visit($expr);
 
-            if ($indexType !== "int") {
+            if ($indexType !== "int32") {
 
                 $this->errors[] = [
                     "line" => $expr->getStart()->getLine(),
@@ -309,7 +346,7 @@ class SemanticVisitor extends GolampiBaseVisitor
     //         if ($operator !== '=') {
 
     //             // operadores como += -= *= /= requieren números
-    //             if ($symbol->type !== "int" && $symbol->type !== "float") {
+    //             if ($symbol->type !== "int32" && $symbol->type !== "float32") {
 
     //                 $this->errors[] = [
     //                     "line" => $idNode->getSymbol()->getLine(),
@@ -353,6 +390,20 @@ class SemanticVisitor extends GolampiBaseVisitor
             return "unknown";
         }
 
+        $name = $ctx->lvalue()->ID()->getText();
+        $symbol = $this->symbolTable->resolve($name);
+
+        if ($symbol && $symbol->isConst) {
+
+            $this->errors[] = [
+                "line" => $ctx->start->getLine(),
+                "column" => $ctx->start->getCharPositionInLine(),
+                "message" => "No se puede modificar la constante '$name'"
+            ];
+
+            return "unknown";
+        }
+
         return $leftType;
     }
 
@@ -360,7 +411,7 @@ class SemanticVisitor extends GolampiBaseVisitor
     {
         $type = $this->visit($ctx->lvalue());
 
-        if (!in_array($type, ["int", "float"])) {
+        if (!in_array($type, ["int32", "float32"])) {
 
             $this->errors[] = [
                 "line" => $ctx->start->getLine(),
@@ -517,7 +568,7 @@ class SemanticVisitor extends GolampiBaseVisitor
 
             $right = $this->visit($ctx->additive($i));
 
-            if (!in_array($type, ["int", "float"]) || !in_array($right, ["int", "float"])) {
+            if (!in_array($type, ["int32", "float32"]) || !in_array($right, ["int32", "float32"])) {
 
                 $this->errors[] = [
                     "line" => $ctx->start->getLine(),
@@ -542,7 +593,7 @@ class SemanticVisitor extends GolampiBaseVisitor
 
             $right = $this->visit($ctx->multiplicative($i));
 
-            if (!in_array($type, ["int", "float"]) || !in_array($right, ["int", "float"])) {
+            if (!in_array($type, ["int32", "float32"]) || !in_array($right, ["int32", "float32"])) {
 
                 $this->errors[] = [
                     "line" => $ctx->start->getLine(),
@@ -553,10 +604,10 @@ class SemanticVisitor extends GolampiBaseVisitor
                 return "unknown";
             }
 
-            if ($type == "float" || $right == "float") {
-                $type = "float";
+            if ($type == "float32" || $right == "float32") {
+                $type = "float32";
             } else {
-                $type = "int";
+                $type = "int32";
             }
         }
 
@@ -571,7 +622,7 @@ class SemanticVisitor extends GolampiBaseVisitor
 
             $right = $this->visit($ctx->unary($i));
 
-            if (!in_array($type, ["int", "float"]) || !in_array($right, ["int", "float"])) {
+            if (!in_array($type, ["int32", "float32"]) || !in_array($right, ["int32", "float32"])) {
 
                 $this->errors[] = [
                     "line" => $ctx->start->getLine(),
@@ -582,10 +633,10 @@ class SemanticVisitor extends GolampiBaseVisitor
                 return "unknown";
             }
 
-            if ($type == "float" || $right == "float") {
-                $type = "float";
+            if ($type == "float32" || $right == "float32") {
+                $type = "float32";
             } else {
-                $type = "int";
+                $type = "int32";
             }
         }
 
@@ -622,7 +673,7 @@ class SemanticVisitor extends GolampiBaseVisitor
 
             case '-':
 
-                if (!in_array($type, ["int", "float"])) {
+                if (!in_array($type, ["int32", "float32"])) {
 
                     $this->errors[] = [
                         "line" => $ctx->start->getLine(),
@@ -707,8 +758,8 @@ class SemanticVisitor extends GolampiBaseVisitor
 
     public function visitLiteral($ctx)
     {
-        if ($ctx->INT()) return "int";
-        if ($ctx->FLOAT()) return "float";
+        if ($ctx->INT()) return "int32";
+        if ($ctx->FLOAT()) return "float32";
         if ($ctx->STRING()) return "string";
         if ($ctx->CHAR()) return "rune";
 
@@ -832,7 +883,7 @@ class SemanticVisitor extends GolampiBaseVisitor
                 return "unknown";
             }
 
-            return "int";
+            return "int32";
         }
 
         /*
@@ -906,7 +957,7 @@ substr()
                 return "unknown";
             }
 
-            if ($startType !== "int" || $lengthType !== "int") {
+            if ($startType !== "int32" || $lengthType !== "int32") {
 
                 $this->errors[] = [
                     "line" => $ctx->start->getLine(),
@@ -920,7 +971,7 @@ substr()
             return "string";
         }
 
-                /*
+        /*
         =========================
         typeOf()
         =========================
